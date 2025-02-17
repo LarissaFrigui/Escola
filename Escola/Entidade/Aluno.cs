@@ -1,4 +1,6 @@
-﻿namespace Escola.Entidade
+﻿using System.Data.Entity;
+
+namespace Escola.Entidade
 {
     public class Aluno
     {

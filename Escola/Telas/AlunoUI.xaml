@@ -5,8 +5,54 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Escola.Telas"
         mc:Ignorable="d"
-        Title="Gerenciamento de alunos" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="Gerenciamento de alunos" Height="450" Width="800" WindowStyle="None">
+    <DockPanel LastChildFill="False">
+        <DockPanel DockPanel.Dock="Top" Height="20" Background="LightSkyBlue">
+            <TextBlock Text="Cadastro Aluno" Margin="5 0" VerticalAlignment="Center"/>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button x:Name="ButtonMinimizar" Width="20"  BorderBrush="LightSkyBlue" Background="LightSkyBlue" Content="🗕" Click="ButtonMinimizar_Click"/>
+                <Button x:Name="ButtonMaximizar" Width="20" Background="LightSkyBlue" Content="🗖" BorderBrush="LightSkyBlue" Click="ButtonMaximizar_Click"/>
+                <Button x:Name="ButtonFechar" Width="20" Background="LightSkyBlue" Content="✕" BorderBrush="LightSkyBlue" Click="ButtonFechar_Click"/>
+            </StackPanel>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <Button x:Name="ButtonSalvarCadastroAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonSalvarCadastroAluno_Click">
+                <TextBlock Text="Salvar" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ButtonLimparCadastroAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonLimparCadastroAluno_Click">
+                <TextBlock Text="Novo" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ButtonAdicionarFolha" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonAdicionarFolha_Click">
+                <TextBlock x:Name="ButtonAdicioanarFolhaPresenca" Text="Adicionar folha de presença" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ButtonApagarAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonApagarAluno_Click">
+                <TextBlock Text="Apagar" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
+            <Label Content="Nome: "/>
+            <TextBox x:Name="TextBoxNomeAluno" VerticalContentAlignment="Center"/>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
+            <Label Content="Classe: "/>
+            <TextBox x:Name="TextBoxClasseAluno" VerticalContentAlignment="Center"/>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
+            <Label Content="Data Nascimento: "/>
+            <TextBox x:Name="TextBoxNascimentoAluno" VerticalContentAlignment="Center" />
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Bottom" Height="20" Background="LightSkyBlue">
+            <TextBlock x:Name="TextRodape"/>
+        </DockPanel>
+        <StackPanel Orientation="Vertical" Margin="10 5">
+            <DataGrid x:Name="DataGridPresenca" AutoGenerateColumns="False" CanUserSortColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Data" Binding="{Binding Data}"/>
+                    <DataGridTextColumn Header="Aulas" Binding="{Binding Aulas}"/>
+                    <DataGridTextColumn Header="Presença" Binding="{Binding PresencaNaAula}"/>
+                    <DataGridTextColumn Header="Atestado" Binding="{Binding PossuiAtestadoFalta}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </DockPanel>
 </Window>

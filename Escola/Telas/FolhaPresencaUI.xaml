@@ -5,8 +5,53 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Escola.Telas"
         mc:Ignorable="d"
-        Title="Gerenciamento de folha de presença" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="Gerenciamento de folha de presença" Height="450" Width="800" WindowStyle="None">
+    <DockPanel LastChildFill="False">
+        <DockPanel DockPanel.Dock="Top" Height="20" Background="LightSkyBlue">
+            <TextBlock Text="Folha de presença" Margin="5 0" VerticalAlignment="Center"/>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button x:Name="ButtonMinimizar" Width="20"  BorderBrush="LightSkyBlue" Background="LightSkyBlue" Content="🗕" Click="ButtonMinimizar_Click"/>
+                <Button x:Name="ButtonMaximizar" Width="20" Background="LightSkyBlue" Content="🗖" BorderBrush="LightSkyBlue" Click="ButtonMaximizar_Click"/>
+                <Button x:Name="ButtonFechar" Width="20" Background="LightSkyBlue" Content="✕" BorderBrush="LightSkyBlue" Click="ButtonFechar_Click"/>
+            </StackPanel>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <Button x:Name="ButtonSalvarFolha" Width="55" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonSalvarFolha_Click">
+                <TextBlock Text="Salvar" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ButtonLimparFolha" Width="55" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonLimparFolha_Click">
+                <TextBlock Text="Novo" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ButtonApagarFolha" Width="55" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White">
+                <TextBlock Text="Apagar" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
+            <Label Content="Aluno: " />
+            <TextBox x:Name="TextBoxAluno" VerticalContentAlignment="Center" FocusableChanged="ChecarAluno"/>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
+            <Label Content="Data:   "/>
+            <TextBox VerticalContentAlignment="Center" x:Name="TextBoxDataFolha"/>
+        </DockPanel>
+        <Grid DockPanel.Dock="Top" Margin="5 5 10 2.5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Label Content="Aulas:  " Grid.Column="0" VerticalAlignment="Center"/>
+            <TextBox x:Name="TextBoxAulas" Grid.Column="1" VerticalAlignment="Center" Height="25.95" VerticalContentAlignment="Center"/>
+            <Label Content="Presença: " Grid.Column="2" VerticalAlignment="Center" />
+            <TextBox x:Name="TextBoxPercentualPresenca" Grid.Column="3" Margin="5 0" VerticalAlignment="Center" VerticalContentAlignment="Center" Height="25.95"/>
+            <CheckBox x:Name="CheckBoxAtestado" Grid.Column="4" VerticalAlignment="Center" Margin="5 0" />
+            <Label Content="Atestado" Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 5 0"/>
+        </Grid>
+        <DockPanel DockPanel.Dock="Bottom" Height="20" Background="LightSkyBlue">
+            <TextBlock x:Name="TextRodape"/>
+        </DockPanel>
+    </DockPanel>
 </Window>

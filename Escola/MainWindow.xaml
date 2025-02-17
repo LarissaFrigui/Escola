@@ -5,13 +5,46 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Escola"
         mc:Ignorable="d"
-        Title="Menu principal" Height="450" Width="800">
-    <DockPanel>
-        <Menu Height="23" DockPanel.Dock="Top">
-            <MenuItem Header="Aluno"/>
-            <MenuItem Header="Folha de presença"/>
-        </Menu>
-        <Grid>
-        </Grid>
+        Title="Menu principal" Height="450" Width="800" WindowStyle="None" ResizeMode="CanResizeWithGrip">
+    <DockPanel LastChildFill="False">
+        <DockPanel DockPanel.Dock="Top" Height="25" Background="LightSkyBlue">
+            <TextBlock Text="Escola" Margin="5 0" VerticalAlignment="Center"/>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button x:Name="ButtonMinimizar" Width="20"  BorderBrush="LightSkyBlue" Background="LightSkyBlue" Content="🗕" Click="ButtonMinimizar_Click"/>
+                <Button x:Name="ButtonMaximizar" Width="20" Background="LightSkyBlue" Content="🗖" BorderBrush="LightSkyBlue" Click="ButtonMaximizar_Click"/>
+                <Button x:Name="ButtonFechar" Width="20" Background="LightSkyBlue" Content="✕" BorderBrush="LightSkyBlue" Click="ButtonFechar_Click"/>
+            </StackPanel>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <Button x:Name="ButtonCadastroAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White"  Click="ButtonCadastroAluno_Click" >
+                <TextBlock Text="Cadastrar aluno" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ButtonCadastroFolha" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonCadastroFolha_Click">
+                <TextBlock Text="Cadastro folha de presença" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+            <Button x:Name="ApagarAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ApagarAluno_Click">
+                <TextBlock Text="Apagar" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+            </Button>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <!--Alterar para grid para ver se melhora o espacamento do botao que esta cortando--> 
+            <DockPanel Margin="10">
+                <TextBox x:Name="TextBoxBusca" Width="640"/>
+                <Button x:Name="ButronBuscarAluno" Height="20" Width="100" HorizontalAlignment="Right" Margin="5 0" Content="Buscar" Click="ButronBuscarAluno_Click"/>
+                <Button x:Name="ButtonAtualizarLista" Height="20" Width="30" HorizontalAlignment="Right" Click="ButtonAtualizarLista_Click">
+                    <TextBlock Text="⟳" VerticalAlignment="Center" FontSize="20" Height="31" Width="18"/>
+                </Button>
+            </DockPanel>
+        </DockPanel>
+        <DataGrid x:Name="DataGridAlunos" AutoGenerateColumns="False" CanUserSortColumns="True" IsReadOnly="True" DockPanel.Dock="Top" Margin="10 5" Initialized="DataGridAlunosInicializar" MouseDoubleClick="AbrirAluno">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Nome" Width="200" Binding="{Binding Nome}"/>
+                <DataGridTextColumn Header="Classe" Width="100" Binding="{Binding Classe}"/>
+                <DataGridTextColumn Header="Data Nascimento" Binding="{Binding DataNascimento, StringFormat='dd/MM/yyyy'}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <DockPanel DockPanel.Dock="Bottom" Height="20" Background="LightSkyBlue">
+            <TextBlock x:Name="TextRodape"/>
+        </DockPanel>
     </DockPanel>
 </Window>
