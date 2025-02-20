@@ -23,8 +23,6 @@ namespace Escola.Telas
     {
         Aluno _alunoCadastrado = null;
 
-        //PRECISO AJUSTAR O DELETE DE FOLHA DE PRESENCA
-
         public AlunoUI()
         {
             InitializeComponent();
@@ -137,13 +135,13 @@ namespace Escola.Telas
             MaskedTextNascimentoAluno.Text = string.Empty;
             TextRodape.Text = string.Empty;
             TextRodape.Text = "";
+            DataGridPresenca.ItemsSource = null;
             _alunoCadastrado = null;
         }
         private void ButtonLimparCadastroAluno_Click(object sender, RoutedEventArgs e)
         {
             LimparCadastro();
         }
-
         private void ButtonAdicionarFolha_Click(object sender, RoutedEventArgs e)
         {
             FolhaPresencaUI folhaPresencaUI = new FolhaPresencaUI(_alunoCadastrado);
@@ -179,31 +177,22 @@ namespace Escola.Telas
         {
             TextRodape.Text = "";
             var folhaSelecionada = DataGridPresenca.SelectedItem as FolhaPresenca;
-            if (folhaSelecionada != null)
+            if(folhaSelecionada == null) { TextRodape.Text = "Selecione uma folha para apagar!"; }
+
+            var result = MessageBox.Show("Deseja realmente apagar a folha de presença?", "Confirmação", MessageBoxButton.YesNoCancel);
+            if (result == MessageBoxResult.Yes) 
             {
                 using (BancoContext ctx = new BancoContext())
                 {
-                    var alunoExiste = ctx.Alunos.FirstOrDefault(a => a.Id == folhaSelecionada.Aluno_Id);
-                    if (alunoExiste == null) { TextRodape.Text = "Aluno não encontrado!"; return; }
-
-                    var result = MessageBox.Show("Deseja realmente apagar o folha de presença?", "Confirmação", MessageBoxButton.YesNoCancel);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        try
-                        {
-                            ctx.FolhasPresenca.Remove(folhaSelecionada);
-                            ctx.SaveChanges();
-                            ListarPresenca();
-                        }
-                        catch (Exception excecao)
-                        {
-                            Console.WriteLine(excecao);
-                            TextRodape.Text = "Erro inesperado! Por favor tente novamente mais tarde.";
-                        }
-                    }
+                    var folhaExistente = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folhaSelecionada.Id);
+                    var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == folhaExistente.Aluno_Id);
+                    folhaExistente.Aluno = aluno;
+                    folhaExistente.Aluno_Id = aluno.Id;
+                    ctx.FolhasPresenca.Remove(folhaExistente);
+                    ctx.SaveChanges();
+                    ListarPresenca();
                 }
             }
-            else { TextRodape.Text = "Selecione uma folha para apagar!"; }
         }
         private void ListarPresenca()
         {
@@ -211,7 +200,7 @@ namespace Escola.Telas
             {
                 using (BancoContext ctx = new BancoContext())
                 {
-                    DataGridPresenca.ItemsSource = ctx.FolhasPresenca.Where(a => a.Aluno_Id == _alunoCadastrado.Id).ToList();
+                    DataGridPresenca.ItemsSource = ctx.FolhasPresenca.Where(a => a.Aluno_Id == _alunoCadastrado.Id).OrderBy(a => a.Data).ToList();
                 }
             }
         }

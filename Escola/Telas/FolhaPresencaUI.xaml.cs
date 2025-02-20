@@ -22,9 +22,6 @@ namespace Escola.Telas
     /// </summary>
     public partial class FolhaPresencaUI : Window
     {
-        //testar se a parte do checar ainda esta funcionando 
-
-        //PRECISO AJUSTAR O METODO DE ATUALIZAR FOLHA DE PRESENCA
         FolhaPresenca _folhaVerifica = null;
         Guid _idAluno;
 
@@ -37,6 +34,7 @@ namespace Escola.Telas
         public FolhaPresencaUI(FolhaPresenca folhaPresenca, Aluno aluno)
         {
             _folhaVerifica = folhaPresenca;
+            _idAluno = aluno.Id;
             InitializeComponent();
             TextBoxAluno.Text = folhaPresenca.Aluno.Nome;
             MaskedTextData.Text = folhaPresenca.Data?.ToString("dd/MM/yyyy") ?? string.Empty;
@@ -104,7 +102,7 @@ namespace Escola.Telas
                     AtualizaFolhaPresenca(_folhaVerifica);
                 }
 
-                //TextRodape.Text = "Salvo com sucesso!";
+                TextRodape.Text = "Salvo com sucesso!";
             }
             catch (Exception ex)
             {
@@ -142,6 +140,7 @@ namespace Escola.Telas
 
                 ctx.FolhasPresenca.Add(novaFolha);
                 ctx.SaveChanges();
+                _folhaVerifica = novaFolha;
             }
         }
         private void AtualizaFolhaPresenca(FolhaPresenca folha)
@@ -169,8 +168,6 @@ namespace Escola.Telas
                     folhaExistente.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
                     folhaExistente.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
 
-                    //Achei o erro! quando ele entra pra buscar o aluno ele se perde, e o aluno ta voltando zerado por isso esta dando problema para salvar 
-                    //acho que o problema ta no _idAluno eu preciso atribuir ele pois ele esta vindo zerado como no default do comeco da classe
                     var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == _idAluno);
                     if (aluno == null)
                     {
@@ -179,9 +176,7 @@ namespace Escola.Telas
                     }
                     folhaExistente.Aluno = aluno;
                     folhaExistente.Aluno_Id = aluno.Id;
-                    MessageBox.Show(folhaExistente.Aluno_Id.ToString());
 
-                    //ctx.FolhasPresenca.Attach(folhaExistente);
                     ctx.Entry(folhaExistente).State = System.Data.Entity.EntityState.Modified;
                     ctx.SaveChanges();
                     TextRodape.Text = "Folha de presença atualizada com sucesso!";
