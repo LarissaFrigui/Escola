@@ -23,7 +23,8 @@ namespace Escola.Telas
     public partial class FolhaPresencaUI : Window
     {
         //testar se a parte do checar ainda esta funcionando 
-        //verificar se o inicializar sem parametros esta precisa
+
+        //PRECISO AJUSTAR O METODO DE ATUALIZAR FOLHA DE PRESENCA
         FolhaPresenca _folhaVerifica = null;
         Guid _idAluno;
 
@@ -49,12 +50,16 @@ namespace Escola.Telas
             try
             {
                 bool dadosInvalidos= false;
-
+                //Talvez a alteracao de cor de para colocar junto com o lostfocus...
                 bool dataValida = DateTime.TryParse(MaskedTextData.Text, out DateTime data);
                 if (!dataValida)
                 {
                     MaskedTextData.BorderBrush = new SolidColorBrush(Colors.Red);
                     dadosInvalidos = true;
+                }
+                else
+                {
+                    MaskedTextData.BorderBrush = new SolidColorBrush(Colors.Black);
                 }
                 bool aulasValidas = int.TryParse(TextBoxAulas.Text, out int aulas);
                 if (!aulasValidas)
@@ -62,12 +67,29 @@ namespace Escola.Telas
                     TextBoxAulas.BorderBrush = new SolidColorBrush(Colors.Red);
                     dadosInvalidos = true;
                 }
-                //colocar um maximo de 100%
+                else
+                {
+                    TextBoxAulas.BorderBrush = new SolidColorBrush(Colors.Black);
+                }
                 bool percentualValido = decimal.TryParse(TextBoxPercentualPresenca.Text, out decimal percentual);
                 if (!percentualValido)
                 {
                     TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Red);
                     dadosInvalidos = true;
+                }
+                else
+                {
+                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Black);
+                }
+                if (percentual > 100)
+                {
+                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Red);
+                    dadosInvalidos = true;
+                    TextRodape.Text = "Percentual de presença não pode ser maior que 100%";
+                }
+                else
+                {
+                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Black);
                 }
 
                 if (dadosInvalidos)
@@ -78,11 +100,11 @@ namespace Escola.Telas
                     NovaFolhaDePresenca();
                 }
                 else
-                {
+                { 
                     AtualizaFolhaPresenca(_folhaVerifica);
                 }
 
-                TextRodape.Text = "Salvo com sucesso!";
+                //TextRodape.Text = "Salvo com sucesso!";
             }
             catch (Exception ex)
             {
@@ -126,38 +148,44 @@ namespace Escola.Telas
         {
             using (BancoContext ctx = new BancoContext())
             {
-                var folhaExistente = ctx.FolhasPresenca.Include(f => f.Aluno).FirstOrDefault(f => f.Id == folha.Id);
+                var folhaExistente = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folha.Id);
                 if (folhaExistente == null)
                 {
                     TextRodape.Text = "Folha de presença não encontrada!";
                     return;
                 }
-                if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
-                {
-                    folhaExistente.Data = Data;
-                }
                 else
                 {
-                    TextRodape.Text = "Data inválida!";
-                    return;
-                }
-                folhaExistente.Aulas = int.Parse(TextBoxAulas.Text);
-                folhaExistente.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
-                folhaExistente.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
+                    if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
+                    {
+                        folhaExistente.Data = Data;
+                    }
+                    else
+                    {
+                        TextRodape.Text = "Data inválida!";
+                        return;
+                    }
+                    folhaExistente.Aulas = int.Parse(TextBoxAulas.Text);
+                    folhaExistente.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
+                    folhaExistente.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
 
-                var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == _idAluno);
-                if (aluno == null)
-                {
-                    TextRodape.Text = "Aluno não cadastrado";
-                    return;
-                }
-                folhaExistente.Aluno = aluno;
-                folhaExistente.Aluno_Id = aluno.Id;
+                    //Achei o erro! quando ele entra pra buscar o aluno ele se perde, e o aluno ta voltando zerado por isso esta dando problema para salvar 
+                    //acho que o problema ta no _idAluno eu preciso atribuir ele pois ele esta vindo zerado como no default do comeco da classe
+                    var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == _idAluno);
+                    if (aluno == null)
+                    {
+                        TextRodape.Text = "Aluno não cadastrado";
+                        return;
+                    }
+                    folhaExistente.Aluno = aluno;
+                    folhaExistente.Aluno_Id = aluno.Id;
+                    MessageBox.Show(folhaExistente.Aluno_Id.ToString());
 
-                //ctx.FolhasPresenca.Attach(folhaExistente);
-                ctx.Entry(folhaExistente).State = System.Data.Entity.EntityState.Modified;
-                ctx.SaveChanges();
-                TextRodape.Text = "Folha de presença atualizada com sucesso!";
+                    //ctx.FolhasPresenca.Attach(folhaExistente);
+                    ctx.Entry(folhaExistente).State = System.Data.Entity.EntityState.Modified;
+                    ctx.SaveChanges();
+                    TextRodape.Text = "Folha de presença atualizada com sucesso!";
+                }
             }
         }
         private void ButtonFechar_Click(object sender, RoutedEventArgs e)
@@ -194,30 +222,6 @@ namespace Escola.Telas
             TextBoxAulas.BorderBrush = new SolidColorBrush(Colors.Black);
             TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Black);
             TextRodape.Text = "";
-        }
-
-        private void ChecarAluno(object sender, RoutedEventArgs e)
-        {
-            bool verificacao = ChecarAlunoValidacao();
-        }
-        private bool ChecarAlunoValidacao()
-        {
-            using (BancoContext ctx = new BancoContext())
-            {
-                Aluno aluno = ctx.Alunos.FirstOrDefault(a => a.Nome == TextBoxAluno.Text);
-                if (aluno == null)
-                {
-                    TextRodape.Text = "Aluno não cadastrado!";
-                    TextBoxAluno.Foreground = new SolidColorBrush(Colors.Red);
-                    return false;
-                }
-                else
-                {
-                    TextRodape.Text = "";
-                    TextBoxAluno.Foreground = new SolidColorBrush(Colors.Black);
-                    return true;
-                }
-            }
         }
     }
 }

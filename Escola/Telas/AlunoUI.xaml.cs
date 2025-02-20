@@ -23,6 +23,8 @@ namespace Escola.Telas
     {
         Aluno _alunoCadastrado = null;
 
+        //PRECISO AJUSTAR O DELETE DE FOLHA DE PRESENCA
+
         public AlunoUI()
         {
             InitializeComponent();

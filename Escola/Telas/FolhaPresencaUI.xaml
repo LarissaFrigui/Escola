@@ -26,7 +26,7 @@
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
             <Label Content="Aluno: " />
-            <TextBox x:Name="TextBoxAluno" VerticalContentAlignment="Center" LostFocus="ChecarAluno" IsEnabled="False"/>
+            <TextBox x:Name="TextBoxAluno" VerticalContentAlignment="Center" IsEnabled="False"/>
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
             <Label Content="Data:   "/>

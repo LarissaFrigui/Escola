@@ -10,8 +10,7 @@ namespace Escola.Entidade
         public Guid Id { get; set; }
         [ForeignKey("Aluno_Id")]
         public Aluno Aluno { get; set; }
-
-        public Guid Aluno_Id { get; set; } // Chave estrangeira para o Aluno
+        public Guid Aluno_Id { get; set; }
         public DateTime? Data { get; set; }
         public int Aulas { get; set; }
         public bool PossuiAtestadoFalta { get; set; }
