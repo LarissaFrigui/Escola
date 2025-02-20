@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:Escola.Telas"
         mc:Ignorable="d"
         Title="Gerenciamento de alunos" Height="450" Width="800" WindowStyle="None">
@@ -26,7 +27,7 @@
                 <TextBlock x:Name="ButtonAdicioanarFolhaPresenca" Text="Adicionar folha de presença" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
             </Button>
             <Button x:Name="ButtonApagarAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonApagarAluno_Click">
-                <TextBlock Text="Apagar" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                <TextBlock Text="Apagar folha de presença" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
             </Button>
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
@@ -39,20 +40,18 @@
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
             <Label Content="Data Nascimento: "/>
-            <TextBox x:Name="TextBoxNascimentoAluno" VerticalContentAlignment="Center" />
+            <xctk:MaskedTextBox x:Name="MaskedTextNascimentoAluno" VerticalContentAlignment="Center" Mask="00/00/0000"/>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Height="20" Background="LightSkyBlue">
             <TextBlock x:Name="TextRodape"/>
         </DockPanel>
-        <StackPanel Orientation="Vertical" Margin="10 5">
-            <DataGrid x:Name="DataGridPresenca" AutoGenerateColumns="False" CanUserSortColumns="True">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Data" Binding="{Binding Data}"/>
-                    <DataGridTextColumn Header="Aulas" Binding="{Binding Aulas}"/>
-                    <DataGridTextColumn Header="Presença" Binding="{Binding PresencaNaAula}"/>
-                    <DataGridTextColumn Header="Atestado" Binding="{Binding PossuiAtestadoFalta}"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </StackPanel>
+        <DataGrid x:Name="DataGridPresenca" AutoGenerateColumns="False" CanUserSortColumns="True" IsReadOnly="True" DockPanel.Dock="Top" Margin="10 5" MouseDoubleClick="AbriFolha" Initialized="DataGridPresencaInicializar">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Data" Binding="{Binding Data, StringFormat='dd/MM/yyyy'}"/>
+                <DataGridTextColumn Header="Aulas" Binding="{Binding Aulas}"/>
+                <DataGridTextColumn Header="Presença" Binding="{Binding PresencaNaAula, StringFormat={}{0}%}"/>
+                <DataGridCheckBoxColumn Header="Atestado" Binding="{Binding PossuiAtestadoFalta}"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </DockPanel>
 </Window>

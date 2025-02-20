@@ -1,10 +1,12 @@
-﻿using System.Data.Entity;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data.Entity;
 
 namespace Escola.Entidade
 {
     public class Aluno
     {
-        public Guid Id { get; set; }
+        [Key]
+        public Guid Id { get; set; } 
         public string Nome { get; set; }
         public string Classe { get; set; }
         public DateTime? DataNascimento { get; set; }
@@ -13,10 +15,12 @@ namespace Escola.Entidade
         public Aluno()
         {
             Id = Guid.Empty;
-            Nome =
-                Classe = string.Empty;
+            Nome = string.Empty;
+            Classe = string.Empty;
             AlteradoEm = null;
             DataNascimento = null;
         }
+
+  
     }
 }

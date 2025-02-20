@@ -27,15 +27,12 @@ namespace Escola
         private void ButtonCadastroAluno_Click(object sender, RoutedEventArgs e)
         {
             AlunoUI alunoUI = new AlunoUI();
+            alunoUI.Closed += (sender, e) =>
+            {
+                ListarAlunos();
+            };
             alunoUI.Show();
         }
-
-        private void ButtonCadastroFolha_Click(object sender, RoutedEventArgs e)
-        {
-            FolhaPresencaUI folhaPresencaUI = new FolhaPresencaUI();
-            folhaPresencaUI.Show();
-        }
-
         private void ButtonFechar_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -71,12 +68,7 @@ namespace Escola
                 DataGridAlunos.ItemsSource = ctx.Alunos.ToList();
             }
         }
-        private void ButtonAtualizarLista_Click(object sender, RoutedEventArgs e)
-        {
-            ListarAlunos();
-            TextRodape.Text = "";
-        }
-        private void ButronBuscarAluno_Click(object sender, RoutedEventArgs e)
+        private void ButtonBuscarAluno_Click(object sender, RoutedEventArgs e)
         {
             if (TextBoxBusca.Text.Trim().Count() > 0)
             {
@@ -103,21 +95,30 @@ namespace Escola
             var alunoSelecionado = DataGridAlunos.SelectedItem as Aluno;
             if (alunoSelecionado != null)
             {
-                using (BancoContext ctx = new BancoContext())
-                { 
-                    ctx.Alunos.Attach(alunoSelecionado);
-                    ctx.Alunos.Remove(alunoSelecionado);
-                    ctx.SaveChanges();
-                    ListarAlunos();
+                TextRodape.Text = "";
+                var result = MessageBox.Show("Deseja realmente apagar o cadastro do aluno?", "Confirmação", MessageBoxButton.YesNoCancel);
+                if (result == MessageBoxResult.Yes)
+                {
+                    using (BancoContext ctx = new BancoContext())
+                    {
+                        ctx.Alunos.Attach(alunoSelecionado);
+                        ctx.Alunos.Remove(alunoSelecionado);
+                        ctx.SaveChanges();
+                        ListarAlunos();
+                    }
                 }
             }
-            else { TextRodape.Text = "Selecione um aluno"; }
+            else { TextRodape.Text = "Selecione um aluno para apagar!"; }
         }
 
         private void AbrirAluno(object sender, MouseButtonEventArgs e)
         {
             var alunoSelecionado = DataGridAlunos.SelectedItem as Aluno;
             AlunoUI alunoUI = new AlunoUI(alunoSelecionado);
+            alunoUI.Closed += (sender, e) =>
+            {
+                ListarAlunos();
+            };
             alunoUI.Show();
         }
     }
