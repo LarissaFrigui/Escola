@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -85,8 +87,10 @@ namespace Escola.Telas
         }
         private void NovoAluno()
         {
-            using (BancoContext ctx = new BancoContext())
+            string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
+                connection.Open();
                 Aluno novoAluno = new Aluno();
                 novoAluno.Id = Guid.NewGuid();
                 novoAluno.Nome = TextBoxNomeAluno.Text;
@@ -101,15 +105,23 @@ namespace Escola.Telas
                     return;
                 }
                 novoAluno.AlteradoEm = DateTime.Now;
-                ctx.Alunos.Add(novoAluno);
-                ctx.SaveChanges();
+
+                SqlCommand command = new SqlCommand("INSERT INTO Alunos (Id, Nome, Classe, DataNascimento, AlteradoEm) VALUES (@Id, @Nome, @Classe, @DataNascimento, @AlteradoEm)", connection);
+                command.Parameters.AddWithValue("@Id", novoAluno.Id);
+                command.Parameters.AddWithValue("@Nome", novoAluno.Nome);
+                command.Parameters.AddWithValue("@Classe", novoAluno.Classe);
+                command.Parameters.AddWithValue("@DataNascimento", novoAluno.DataNascimento);
+                command.Parameters.AddWithValue("@AlteradoEm", novoAluno.AlteradoEm);
+                command.ExecuteNonQuery();
                 _alunoCadastrado = novoAluno;
             }
         }
         private void Atualiza(Aluno aluno)
         {
-            using (BancoContext ctx = new BancoContext())
+            string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
+                connection.Open();
                 aluno.Nome = TextBoxNomeAluno.Text;
                 aluno.Classe = TextBoxClasseAluno.Text;
                 if (DateTime.TryParseExact(MaskedTextNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dataNascimento))
@@ -122,9 +134,13 @@ namespace Escola.Telas
                     return;
                 }
                 aluno.AlteradoEm = DateTime.Now;
-                ctx.Alunos.Attach(aluno);
-                ctx.Entry(aluno).State = System.Data.Entity.EntityState.Modified;
-                ctx.SaveChanges();
+                SqlCommand command = new SqlCommand("UPDATE Alunos SET Nome = @Nome, Classe = @Classe, DataNascimento = @DataNascimento, AlteradoEm = @AlteradoEm WHERE Id = @Id", connection);
+                command.Parameters.AddWithValue("@Id", aluno.Id);
+                command.Parameters.AddWithValue("@Nome", aluno.Nome);
+                command.Parameters.AddWithValue("@Classe", aluno.Classe);
+                command.Parameters.AddWithValue("@DataNascimento", aluno.DataNascimento);
+                command.Parameters.AddWithValue("@AlteradoEm", aluno.AlteradoEm);
+                command.ExecuteNonQuery();
             }
 
         }
@@ -175,6 +191,7 @@ namespace Escola.Telas
         }
         private void ButtonApagarAluno_Click(object sender, RoutedEventArgs e)
         {
+            //PRECISO AJUSTAR O NOME DESSE BOTÃO, ELE NÃO APAGA MAIS O ALUNO, APAGA A FOLHA DE PRESENÇA DENTRO DO CADASTRO DO ALUNO
             TextRodape.Text = "";
             var folhaSelecionada = DataGridPresenca.SelectedItem as FolhaPresenca;
             if(folhaSelecionada == null) { TextRodape.Text = "Selecione uma folha para apagar!"; }
@@ -182,14 +199,19 @@ namespace Escola.Telas
             var result = MessageBox.Show("Deseja realmente apagar a folha de presença?", "Confirmação", MessageBoxButton.YesNoCancel);
             if (result == MessageBoxResult.Yes) 
             {
-                using (BancoContext ctx = new BancoContext())
+                string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    var folhaExistente = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folhaSelecionada.Id);
-                    var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == folhaExistente.Aluno_Id);
-                    folhaExistente.Aluno = aluno;
-                    folhaExistente.Aluno_Id = aluno.Id;
-                    ctx.FolhasPresenca.Remove(folhaExistente);
-                    ctx.SaveChanges();
+                    connection.Open();
+                    SqlCommand command = new SqlCommand("DELETE FROM FolhasPresenca WHERE Id = @Id", connection);
+                    command.Parameters.AddWithValue("@Id", folhaSelecionada.Id);
+                    command.ExecuteNonQuery();
+                    //var folhaExistente = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folhaSelecionada.Id);
+                    //var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == folhaExistente.Aluno_Id);
+                    //folhaExistente.Aluno = aluno;
+                    //folhaExistente.Aluno_Id = aluno.Id;
+                    //ctx.FolhasPresenca.Remove(folhaExistente);
+                    //ctx.SaveChanges();
                     ListarPresenca();
                 }
             }
@@ -198,9 +220,26 @@ namespace Escola.Telas
         {
             if (_alunoCadastrado != null)
             {
-                using (BancoContext ctx = new BancoContext())
+                string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    DataGridPresenca.ItemsSource = ctx.FolhasPresenca.Where(a => a.Aluno_Id == _alunoCadastrado.Id).OrderBy(a => a.Data).ToList();
+                    connection.Open();
+                    SqlCommand command = new SqlCommand("SELECT Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhaPresenca WHERE Aluno_Id = @Aluno_Id ORDER BY Data", connection);
+                    command.Parameters.AddWithValue("@Aluno_Id", _alunoCadastrado.Id);
+                    SqlDataReader reader = command.ExecuteReader();
+                    List<FolhaPresenca> folhas = new List<FolhaPresenca>();
+                    while (reader.Read())
+                    {
+                        FolhaPresenca folha = new FolhaPresenca
+                        {
+                            Data = reader.GetDateTime(0),
+                            Aulas = reader.GetInt32(1),
+                            PresencaNaAula = reader.GetDecimal(2),
+                            PossuiAtestadoFalta = reader.GetBoolean(3)
+                        };
+                        folhas.Add(folha);
+                    }
+                    DataGridPresenca.ItemsSource = folhas;
                 }
             }
         }
@@ -213,16 +252,44 @@ namespace Escola.Telas
             var folhaSelecionada = DataGridPresenca.SelectedItem as FolhaPresenca;
             if (folhaSelecionada != null)
             {
-                using (BancoContext ctx = new BancoContext())
+                string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    var folha = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folhaSelecionada.Id);
-                    if (folha != null)
+                    connection.Open();
+                    SqlCommand commandBuscaFolha = new SqlCommand("SELEC Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhasPresenca WHERE Id = @Id", connection);
+                    commandBuscaFolha.Parameters.AddWithValue("@Id", folhaSelecionada.Id);
+                    SqlDataReader reader = commandBuscaFolha.ExecuteReader();
+                    FolhaPresenca folhaExiste = null;
+                    while (reader.Read())
                     {
-                        var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == folha.Aluno_Id);
+                         folhaExiste = new FolhaPresenca
+                        {
+                            Data = reader.GetDateTime(0),
+                            Aulas = reader.GetInt32(1),
+                            PresencaNaAula = reader.GetDecimal(2),
+                            PossuiAtestadoFalta = reader.GetBoolean(3),
+                        };
+                    }
+                    if (folhaExiste != null)
+                    {
+                        SqlCommand commandBusca = new SqlCommand("SELECT * FROM Alunos WHERE ID = @ID", connection);
+                        commandBusca.Parameters.AddWithValue("@ID", _alunoCadastrado);
+                        SqlDataReader readerAluno = commandBusca.ExecuteReader();
+                        Aluno aluno = null;
+                        while (readerAluno.Read())
+                        {
+                            aluno = new Aluno
+                            {
+                                Id = reader.GetGuid(0),
+                                Nome = reader.GetString(1),
+                                Classe = reader.GetString(2),
+                                DataNascimento = reader.GetDateTime(3),
+                            };
+                        }
                         if (aluno != null)
                         {
-                            folha.Aluno = aluno;
-                            FolhaPresencaUI folhaPresenca = new FolhaPresencaUI(folha, aluno);
+                            folhaExiste.Aluno = aluno;
+                            FolhaPresencaUI folhaPresenca = new FolhaPresencaUI(folhaExiste, aluno);
                             folhaPresenca.Closed += (sender, e) =>
                             {
                                 ListarPresenca();

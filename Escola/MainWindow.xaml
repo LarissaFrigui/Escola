@@ -33,7 +33,8 @@
                 <Button x:Name="ButronBuscarAluno" Height="20" Grid.Column="1" HorizontalAlignment="Right" Margin="5 0" Content="Buscar" Click="ButtonBuscarAluno_Click" Padding="10 0"/>
             </Grid>
         </DockPanel>
-        <DataGrid x:Name="DataGridAlunos" AutoGenerateColumns="False" CanUserSortColumns="True" IsReadOnly="True" DockPanel.Dock="Top" Margin="10 5" Initialized="DataGridAlunosInicializar" MouseDoubleClick="AbrirAluno">
+        <DataGrid x:Name="DataGridAlunos" AutoGenerateColumns="False" CanUserSortColumns="True" IsReadOnly="True" DockPanel.Dock="Top" Margin="10 5" Initialized="DataGridAlunosInicializar" MouseDoubleClick="AbrirAluno" SelectionMode="Single"
+          SelectionUnit="FullRow">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Nome" Width="200" Binding="{Binding Nome}"/>
                 <DataGridTextColumn Header="Classe" Width="100" Binding="{Binding Classe}"/>

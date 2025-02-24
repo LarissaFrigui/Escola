@@ -11,6 +11,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Escola.Entidade;
 using System.Security.AccessControl;
+using System.Data.SqlClient;
+using System.Configuration;
 
 namespace Escola
 {
@@ -45,7 +47,7 @@ namespace Escola
 
         private void ButtonMaximizar_Click(object sender, RoutedEventArgs e)
         {
-            if(this.WindowState == WindowState.Maximized)
+            if (this.WindowState == WindowState.Maximized)
             {
                 this.WindowState = WindowState.Normal;
                 ButtonMaximizar.Content = "🗖";
@@ -63,9 +65,25 @@ namespace Escola
         }
         private void ListarAlunos()
         {
-            using (BancoContext ctx = new BancoContext())
+            string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                DataGridAlunos.ItemsSource = ctx.Alunos.ToList();
+                connection.Open();
+                SqlCommand command = new SqlCommand("SELECT id, Nome,Classe,DataNascimento FROM Alunos", connection);
+                SqlDataReader reader = command.ExecuteReader();
+                List<Aluno> alunos = new List<Aluno>();
+                while (reader.Read())
+                {
+                    Aluno aluno = new Aluno
+                    {
+                        Id = reader.GetGuid(0),
+                        Nome = reader.GetString(1),
+                        Classe = reader.GetString(2),
+                        DataNascimento = reader.GetDateTime(3),
+                    };
+                    alunos.Add(aluno); 
+                }
+                DataGridAlunos.ItemsSource = alunos;
             }
         }
         private void ButtonBuscarAluno_Click(object sender, RoutedEventArgs e)
@@ -74,9 +92,24 @@ namespace Escola
             {
                 try
                 {
-                    using (BancoContext ctx = new BancoContext())
+                    string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+                    using (SqlConnection connection = new SqlConnection(connectionString))
                     {
-                        var busca = ctx.Alunos.Where(a => a.Nome.Contains(TextBoxBusca.Text)).ToList();
+                        connection.Open();
+                        SqlCommand command = new SqlCommand("SELECT Nome,Classe,DataNascimento FROM Alunos WHERE Nome LIKE @Nome", connection);
+                        command.Parameters.AddWithValue("@Nome", "%" + TextBoxBusca.Text + "%");
+                        SqlDataReader reader = command.ExecuteReader();
+                        List<Aluno> busca = new List<Aluno>();
+                        while (reader.Read())
+                        {
+                            Aluno aluno = new Aluno
+                            {
+                                Nome = reader.GetString(0),
+                                Classe = reader.GetString(1),
+                                DataNascimento = reader.GetDateTime(2),
+                            };
+                            busca.Add(aluno);
+                        }
                         DataGridAlunos.ItemsSource = busca;
                         if (busca.Count == 0)
                         {
@@ -99,12 +132,22 @@ namespace Escola
                 var result = MessageBox.Show("Deseja realmente apagar o cadastro do aluno?", "Confirmação", MessageBoxButton.YesNoCancel);
                 if (result == MessageBoxResult.Yes)
                 {
-                    using (BancoContext ctx = new BancoContext())
+                    try 
                     {
-                        ctx.Alunos.Attach(alunoSelecionado);
-                        ctx.Alunos.Remove(alunoSelecionado);
-                        ctx.SaveChanges();
+                        string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+                        using (SqlConnection connection = new SqlConnection(connectionString))
+                        {
+                            connection.Open();
+                            SqlCommand command = new SqlCommand("DELETE FROM Alunos WHERE ID = @Id", connection);
+                            command.Parameters.AddWithValue("@Id", alunoSelecionado.Id);
+                            var id = alunoSelecionado.Id;
+                            command.ExecuteNonQuery();
+                        }
                         ListarAlunos();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Erro ao apagar aluno: " + ex.Message);
                     }
                 }
             }

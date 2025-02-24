@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -14,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Escola.Entidade;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Escola.Telas
 {
@@ -112,16 +115,18 @@ namespace Escola.Telas
         }
         private void NovaFolhaDePresenca()
         {
-            using (BancoContext ctx = new BancoContext())
+            string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == _idAluno);
+                connection.Open();
+                Aluno aluno = BuscaAluno();
                 if (aluno == null)
                 {
                     MessageBox.Show("Aluno não cadastrado");
                     return;
                 }
-
                 FolhaPresenca novaFolha = new FolhaPresenca();
+                novaFolha.Id = Guid.NewGuid();
 
                 if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
                 {
@@ -138,49 +143,90 @@ namespace Escola.Telas
                 novaFolha.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
                 novaFolha.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
 
-                ctx.FolhasPresenca.Add(novaFolha);
-                ctx.SaveChanges();
+                SqlCommand commandInsert = new SqlCommand("INSERT INTO FolhasPresenca (Id, Aluno, Aluno_Id, Data, Aulas, PresencaNaAula, PossuiAtestadoFalta) VALUES (@Id, @Aluno, @Aluno_Id, @Data, @Aulas, @PresencaNaAula, @PossuiAtestadoFalta)", connection);
+                commandInsert.Parameters.AddWithValue("@Id", novaFolha.Id);
+                commandInsert.Parameters.AddWithValue("@Aluno_Id", novaFolha.Aluno_Id);
+                commandInsert.Parameters.AddWithValue("@Aluno", novaFolha.Aluno);
+                commandInsert.Parameters.AddWithValue("@Data", novaFolha.Data);
+                commandInsert.Parameters.AddWithValue("@Aulas", novaFolha.Aulas);
+                commandInsert.Parameters.AddWithValue("@PresencaNaAula", novaFolha.PresencaNaAula);
+                commandInsert.Parameters.AddWithValue("@PossuiAtestadoFalta", novaFolha.PossuiAtestadoFalta);
+                commandInsert.ExecuteNonQuery();
                 _folhaVerifica = novaFolha;
             }
         }
+
+        private Aluno BuscaAluno()
+        {
+            string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand commandBusca = new SqlCommand("SELECT * FROM Alunos WHERE ID = @ID", connection);
+                commandBusca.Parameters.AddWithValue("@ID", _idAluno);
+                SqlDataReader reader = commandBusca.ExecuteReader();
+                Aluno aluno = null;
+                while (reader.Read())
+                {
+                    aluno = new Aluno
+                    {
+                        Id = reader.GetGuid(0),
+                        Nome = reader.GetString(1),
+                        Classe = reader.GetString(2),
+                        DataNascimento = reader.GetDateTime(3),
+                    };
+                }
+                return aluno;
+            }
+        }
+
         private void AtualizaFolhaPresenca(FolhaPresenca folha)
         {
-            using (BancoContext ctx = new BancoContext())
+            string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                var folhaExistente = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folha.Id);
-                if (folhaExistente == null)
+                connection.Open();
+                Aluno aluno = BuscaAluno();
+                if (aluno == null)
                 {
-                    TextRodape.Text = "Folha de presença não encontrada!";
+                    MessageBox.Show("Aluno não cadastrado");
                     return;
+                }
+                SqlCommand commandBuscaFolha = new SqlCommand("SELEC Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhasPresenca WHERE Id = @Id", connection);
+                commandBuscaFolha.Parameters.AddWithValue("@Id", folha.Id);
+                SqlDataReader reader = commandBuscaFolha.ExecuteReader();
+                FolhaPresenca folhaExiste = null;
+                while (reader.Read())
+                {
+                    folhaExiste = new FolhaPresenca
+                    {
+                        Data = reader.GetDateTime(0),
+                        Aulas = reader.GetInt32(1),
+                        PresencaNaAula = reader.GetDecimal(2),
+                        PossuiAtestadoFalta = reader.GetBoolean(3),
+                    };
+                }
+                if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
+                {
+                    folha.Data = Data;
                 }
                 else
                 {
-                    if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
-                    {
-                        folhaExistente.Data = Data;
-                    }
-                    else
-                    {
-                        TextRodape.Text = "Data inválida!";
-                        return;
-                    }
-                    folhaExistente.Aulas = int.Parse(TextBoxAulas.Text);
-                    folhaExistente.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
-                    folhaExistente.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
-
-                    var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == _idAluno);
-                    if (aluno == null)
-                    {
-                        TextRodape.Text = "Aluno não cadastrado";
-                        return;
-                    }
-                    folhaExistente.Aluno = aluno;
-                    folhaExistente.Aluno_Id = aluno.Id;
-
-                    ctx.Entry(folhaExistente).State = System.Data.Entity.EntityState.Modified;
-                    ctx.SaveChanges();
-                    TextRodape.Text = "Folha de presença atualizada com sucesso!";
+                    TextRodape.Text = "Data inválida!";
+                    return;
                 }
+                folha.Aulas = int.Parse(TextBoxAulas.Text);
+                folha.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
+                folha.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
+
+                SqlCommand commandUpdate = new SqlCommand("UPDATE FolhasPresenca SET Data = @Data, Aulas = @Aulas, PresencaNaAula = @PresencaNaAula, PossuiAtestadoFalta = @PossuiAtestadoFalta WHERE Id = @Id", connection);
+                commandUpdate.Parameters.AddWithValue("@Id", folha.Id);
+                commandUpdate.Parameters.AddWithValue("@Data", folha.Data);
+                commandUpdate.Parameters.AddWithValue("@Aulas", folha.Aulas);
+                commandUpdate.Parameters.AddWithValue("@PresencaNaAula", folha.PresencaNaAula);
+                commandUpdate.Parameters.AddWithValue("@PossuiAtestadoFalta", folha.PossuiAtestadoFalta);
+                commandUpdate.ExecuteNonQuery();
+                TextRodape.Text = "Folha de presença atualizada com sucesso!";
             }
         }
         private void ButtonFechar_Click(object sender, RoutedEventArgs e)

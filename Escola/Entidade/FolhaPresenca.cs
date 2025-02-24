@@ -8,7 +8,7 @@ namespace Escola.Entidade
     {
         [Key]
         public Guid Id { get; set; }
-        [ForeignKey("Aluno_Id")]
+        [ForeignKey("Aluno_ID")]
         public Aluno Aluno { get; set; }
         public Guid Aluno_Id { get; set; }
         public DateTime? Data { get; set; }
