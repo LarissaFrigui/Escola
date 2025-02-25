@@ -26,7 +26,7 @@
             <Button x:Name="ButtonAdicionarFolha" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonAdicionarFolha_Click">
                 <TextBlock x:Name="ButtonAdicioanarFolhaPresenca" Text="Adicionar folha de presença" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
             </Button>
-            <Button x:Name="ButtonApagarAluno" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonApagarAluno_Click">
+            <Button x:Name="ButtonApagarFolhaPresenca" Width="60" Height="60" HorizontalAlignment="Left" Margin="10 7 5 7" BorderBrush="#FFDBEFFA" Background="White" Click="ButtonApagarFolhaPresenca_Click">
                 <TextBlock Text="Apagar folha de presença" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
             </Button>
         </DockPanel>
@@ -40,7 +40,7 @@
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="5 5 10 2.5">
             <Label Content="Data Nascimento: "/>
-            <xctk:MaskedTextBox x:Name="MaskedTextNascimentoAluno" VerticalContentAlignment="Center" Mask="00/00/0000"/>
+            <TextBox x:Name="TextBoxNascimentoAluno" VerticalContentAlignment="Center" PreviewTextInput="Mascara_PreviewTextInput" LostFocus="Mascara_LostFocus" TextChanged="Mascara_TextChanged" />
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Height="20" Background="LightSkyBlue">
             <TextBlock x:Name="TextRodape"/>

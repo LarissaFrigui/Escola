@@ -35,36 +35,33 @@ namespace Escola.Telas
             InitializeComponent();
             TextBoxNomeAluno.Text = aluno.Nome; 
             TextBoxClasseAluno.Text = aluno.Classe;
-            MaskedTextNascimentoAluno.Text = aluno.DataNascimento?.ToString("dd/MM/yyyy") ?? string.Empty;
+            TextBoxNascimentoAluno.Text = aluno.DataNascimento?.ToString("dd/MM/yyyy") ?? string.Empty;
         }
         private void ButtonSalvarCadastroAluno_Click(object sender, RoutedEventArgs e)
         {
             var dadosValidos = true;
-            //testar o borderbrush
             try
             {
                 if (string.IsNullOrWhiteSpace(TextBoxNomeAluno.Text))
                 {
                     TextBoxNomeAluno.BorderBrush = Brushes.Red;
+                    TextRodape.Text = "Nome inválido!";
                     dadosValidos = false;
                 }
-
-                if (string.IsNullOrWhiteSpace(TextBoxClasseAluno.Text))
+                if (!string.IsNullOrWhiteSpace(TextBoxNascimentoAluno.Text) && !DateTime.TryParseExact(TextBoxNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
                 {
-                    TextBoxClasseAluno.BorderBrush = Brushes.Red;
+                    TextBoxNascimentoAluno.BorderBrush = Brushes.Red;
+                    TextRodape.Text = "Data inválida!";
                     dadosValidos = false;
                 }
-
-                if (string.IsNullOrWhiteSpace(MaskedTextNascimentoAluno.Text))
-                {
-                    MaskedTextNascimentoAluno.BorderBrush = Brushes.Red;
-                    dadosValidos = false;
-                }
-
                 if (!dadosValidos)
                 {
-                    TextRodape.Text = "Dados incorretos, por favor verifique os campos sinalizados!";
                     return;
+                }
+                else
+                {
+                    TextBoxNomeAluno.BorderBrush = Brushes.Gray;
+                    TextBoxNascimentoAluno.BorderBrush = Brushes.Gray;
                 }
 
                 if (_alunoCadastrado == null)
@@ -95,22 +92,21 @@ namespace Escola.Telas
                 novoAluno.Id = Guid.NewGuid();
                 novoAluno.Nome = TextBoxNomeAluno.Text;
                 novoAluno.Classe = TextBoxClasseAluno.Text;
-                if (DateTime.TryParseExact(MaskedTextNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dataNascimento))
-                {
-                    novoAluno.DataNascimento = dataNascimento;
-                }
-                else
-                {
-                    TextRodape.Text = "Data inválida!";
-                    return;
-                }
+                novoAluno.DataNascimento = string.IsNullOrWhiteSpace(TextBoxNascimentoAluno.Text) ? (DateTime?)null : DateTime.ParseExact(TextBoxNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
                 novoAluno.AlteradoEm = DateTime.Now;
 
                 SqlCommand command = new SqlCommand("INSERT INTO Alunos (Id, Nome, Classe, DataNascimento, AlteradoEm) VALUES (@Id, @Nome, @Classe, @DataNascimento, @AlteradoEm)", connection);
                 command.Parameters.AddWithValue("@Id", novoAluno.Id);
                 command.Parameters.AddWithValue("@Nome", novoAluno.Nome);
                 command.Parameters.AddWithValue("@Classe", novoAluno.Classe);
-                command.Parameters.AddWithValue("@DataNascimento", novoAluno.DataNascimento);
+                if (novoAluno.DataNascimento.HasValue)
+                {
+                    command.Parameters.AddWithValue("@DataNascimento", novoAluno.DataNascimento.Value);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@DataNascimento", DBNull.Value);
+                }
                 command.Parameters.AddWithValue("@AlteradoEm", novoAluno.AlteradoEm);
                 command.ExecuteNonQuery();
                 _alunoCadastrado = novoAluno;
@@ -124,15 +120,7 @@ namespace Escola.Telas
                 connection.Open();
                 aluno.Nome = TextBoxNomeAluno.Text;
                 aluno.Classe = TextBoxClasseAluno.Text;
-                if (DateTime.TryParseExact(MaskedTextNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dataNascimento))
-                {
-                    aluno.DataNascimento = dataNascimento;
-                }
-                else
-                {
-                    TextRodape.Text = "Data inválida!";
-                    return;
-                }
+                aluno.DataNascimento = DateTime.ParseExact(TextBoxNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
                 aluno.AlteradoEm = DateTime.Now;
                 SqlCommand command = new SqlCommand("UPDATE Alunos SET Nome = @Nome, Classe = @Classe, DataNascimento = @DataNascimento, AlteradoEm = @AlteradoEm WHERE Id = @Id", connection);
                 command.Parameters.AddWithValue("@Id", aluno.Id);
@@ -144,19 +132,15 @@ namespace Escola.Telas
             }
 
         }
-        public void LimparCadastro()
+        private void ButtonLimparCadastroAluno_Click(object sender, RoutedEventArgs e)
         {
             TextBoxNomeAluno.Text = string.Empty;
             TextBoxClasseAluno.Text = string.Empty;
-            MaskedTextNascimentoAluno.Text = string.Empty;
+            TextBoxNascimentoAluno.Text = string.Empty;
             TextRodape.Text = string.Empty;
             TextRodape.Text = "";
             DataGridPresenca.ItemsSource = null;
             _alunoCadastrado = null;
-        }
-        private void ButtonLimparCadastroAluno_Click(object sender, RoutedEventArgs e)
-        {
-            LimparCadastro();
         }
         private void ButtonAdicionarFolha_Click(object sender, RoutedEventArgs e)
         {
@@ -189,32 +173,35 @@ namespace Escola.Telas
                 ButtonMaximizar.Content = "🗗";
             }
         }
-        private void ButtonApagarAluno_Click(object sender, RoutedEventArgs e)
+        private void ButtonApagarFolhaPresenca_Click(object sender, RoutedEventArgs e)
         {
-            //PRECISO AJUSTAR O NOME DESSE BOTÃO, ELE NÃO APAGA MAIS O ALUNO, APAGA A FOLHA DE PRESENÇA DENTRO DO CADASTRO DO ALUNO
             TextRodape.Text = "";
             var folhaSelecionada = DataGridPresenca.SelectedItem as FolhaPresenca;
-            if(folhaSelecionada == null) { TextRodape.Text = "Selecione uma folha para apagar!"; }
-
-            var result = MessageBox.Show("Deseja realmente apagar a folha de presença?", "Confirmação", MessageBoxButton.YesNoCancel);
-            if (result == MessageBoxResult.Yes) 
+            if (folhaSelecionada != null)
             {
-                string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
-                using (SqlConnection connection = new SqlConnection(connectionString))
+
+                var result = MessageBox.Show("Deseja realmente apagar a folha de presença?", "Confirmação", MessageBoxButton.YesNoCancel);
+                if (result == MessageBoxResult.Yes)
                 {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand("DELETE FROM FolhasPresenca WHERE Id = @Id", connection);
-                    command.Parameters.AddWithValue("@Id", folhaSelecionada.Id);
-                    command.ExecuteNonQuery();
-                    //var folhaExistente = ctx.FolhasPresenca.FirstOrDefault(f => f.Id == folhaSelecionada.Id);
-                    //var aluno = ctx.Alunos.FirstOrDefault(a => a.Id == folhaExistente.Aluno_Id);
-                    //folhaExistente.Aluno = aluno;
-                    //folhaExistente.Aluno_Id = aluno.Id;
-                    //ctx.FolhasPresenca.Remove(folhaExistente);
-                    //ctx.SaveChanges();
-                    ListarPresenca();
+                    try
+                    {
+                        string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
+                        using (SqlConnection connection = new SqlConnection(connectionString))
+                        {
+                            connection.Open();
+                            SqlCommand command = new SqlCommand("DELETE FROM FolhaPresenca WHERE Id = @Id", connection);
+                            command.Parameters.AddWithValue("@Id", folhaSelecionada.Id);
+                            command.ExecuteNonQuery();
+                        }
+                        ListarPresenca();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Erro ao apagar folha de presença: " + ex.Message);
+                    }
                 }
             }
+            else { TextRodape.Text = "Selecione uma folha para apagar!"; }
         }
         private void ListarPresenca()
         {
@@ -224,7 +211,7 @@ namespace Escola.Telas
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    SqlCommand command = new SqlCommand("SELECT Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhaPresenca WHERE Aluno_Id = @Aluno_Id ORDER BY Data", connection);
+                    SqlCommand command = new SqlCommand("SELECT id, Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhaPresenca WHERE Aluno_Id = @Aluno_Id ORDER BY Data", connection);
                     command.Parameters.AddWithValue("@Aluno_Id", _alunoCadastrado.Id);
                     SqlDataReader reader = command.ExecuteReader();
                     List<FolhaPresenca> folhas = new List<FolhaPresenca>();
@@ -232,10 +219,11 @@ namespace Escola.Telas
                     {
                         FolhaPresenca folha = new FolhaPresenca
                         {
-                            Data = reader.GetDateTime(0),
-                            Aulas = reader.GetInt32(1),
-                            PresencaNaAula = reader.GetDecimal(2),
-                            PossuiAtestadoFalta = reader.GetBoolean(3)
+                            Id = reader.GetGuid(0),
+                            Data = reader.GetDateTime(1),
+                            Aulas = reader.GetInt32(2),
+                            PresencaNaAula = reader.GetDecimal(3),
+                            PossuiAtestadoFalta = reader.GetBoolean(4)
                         };
                         folhas.Add(folha);
                     }
@@ -250,59 +238,53 @@ namespace Escola.Telas
         private void AbriFolha(object sender, MouseButtonEventArgs e)
         {
             var folhaSelecionada = DataGridPresenca.SelectedItem as FolhaPresenca;
-            if (folhaSelecionada != null)
+            FolhaPresencaUI folhaPresencaUI = new FolhaPresencaUI(folhaSelecionada, _alunoCadastrado);
+            folhaPresencaUI.Closed += (sender, e) =>
             {
-                string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    SqlCommand commandBuscaFolha = new SqlCommand("SELEC Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhasPresenca WHERE Id = @Id", connection);
-                    commandBuscaFolha.Parameters.AddWithValue("@Id", folhaSelecionada.Id);
-                    SqlDataReader reader = commandBuscaFolha.ExecuteReader();
-                    FolhaPresenca folhaExiste = null;
-                    while (reader.Read())
-                    {
-                         folhaExiste = new FolhaPresenca
-                        {
-                            Data = reader.GetDateTime(0),
-                            Aulas = reader.GetInt32(1),
-                            PresencaNaAula = reader.GetDecimal(2),
-                            PossuiAtestadoFalta = reader.GetBoolean(3),
-                        };
-                    }
-                    if (folhaExiste != null)
-                    {
-                        SqlCommand commandBusca = new SqlCommand("SELECT * FROM Alunos WHERE ID = @ID", connection);
-                        commandBusca.Parameters.AddWithValue("@ID", _alunoCadastrado);
-                        SqlDataReader readerAluno = commandBusca.ExecuteReader();
-                        Aluno aluno = null;
-                        while (readerAluno.Read())
-                        {
-                            aluno = new Aluno
-                            {
-                                Id = reader.GetGuid(0),
-                                Nome = reader.GetString(1),
-                                Classe = reader.GetString(2),
-                                DataNascimento = reader.GetDateTime(3),
-                            };
-                        }
-                        if (aluno != null)
-                        {
-                            folhaExiste.Aluno = aluno;
-                            FolhaPresencaUI folhaPresenca = new FolhaPresencaUI(folhaExiste, aluno);
-                            folhaPresenca.Closed += (sender, e) =>
-                            {
-                                ListarPresenca();
-                            };
-                            folhaPresenca.Show();
-                        }
-                        else
-                        {
-                            MessageBox.Show("Folha de presença não encontrada.");
-                        }
+                ListarPresenca();
+            };
+            folhaPresencaUI.Show();
+        }
 
-                    }
-                }
+        private void Mascara_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if(!char.IsDigit(e.Text, e.Text.Length - 1))
+            {
+                e.Handled = true;
+                return;
+            }
+            var textBox = sender as TextBox;
+            string textoAtual = textBox.Text;
+
+            if(textBox.Text.Length == 2 || textoAtual.Length == 5)
+            {
+                textBox.Text += "/";
+                textBox.CaretIndex = textBox.Text.Length;
+            }
+        }
+
+        private void Mascara_LostFocus(object sender, RoutedEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            if (!DateTime.TryParseExact(textBox.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            {
+                textBox.BorderBrush = Brushes.Red;
+                TextRodape.Text = "Data inválida!";
+            }
+            else
+            {
+                textBox.BorderBrush = Brushes.Gray;
+                TextRodape.Text = "";
+            }
+        }
+
+        private void Mascara_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            if (textBox.Text.Length > 10)
+            {
+                textBox.Text = textBox.Text.Substring(0, 10);
+                textBox.CaretIndex = textBox.Text.Length;
             }
         }
     }

@@ -23,6 +23,9 @@ namespace Escola.Telas
     /// <summary>
     /// Lógica interna para FolhaPresencaUI.xaml
     /// </summary>
+
+    // Quando eu clico fora da celulas da linha da folha de presença ele da erro, verificar como resolver isso
+
     public partial class FolhaPresencaUI : Window
     {
         FolhaPresenca _folhaVerifica = null;
@@ -39,69 +42,22 @@ namespace Escola.Telas
             _folhaVerifica = folhaPresenca;
             _idAluno = aluno.Id;
             InitializeComponent();
-            TextBoxAluno.Text = folhaPresenca.Aluno.Nome;
-            MaskedTextData.Text = folhaPresenca.Data?.ToString("dd/MM/yyyy") ?? string.Empty;
+            TextBoxAluno.Text = aluno.Nome;
+            TextBoxDataAula.Text = folhaPresenca.Data?.ToString("dd/MM/yyyy") ?? string.Empty;
             TextBoxAulas.Text = folhaPresenca.Aulas.ToString();
             TextBoxPercentualPresenca.Text = folhaPresenca.PresencaNaAula.ToString();
             CheckBoxAtestado.IsChecked = folhaPresenca.PossuiAtestadoFalta;
         }
-
         private void ButtonSalvarFolha_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                bool dadosInvalidos= false;
-                //Talvez a alteracao de cor de para colocar junto com o lostfocus...
-                bool dataValida = DateTime.TryParse(MaskedTextData.Text, out DateTime data);
-                if (!dataValida)
-                {
-                    MaskedTextData.BorderBrush = new SolidColorBrush(Colors.Red);
-                    dadosInvalidos = true;
-                }
-                else
-                {
-                    MaskedTextData.BorderBrush = new SolidColorBrush(Colors.Black);
-                }
-                bool aulasValidas = int.TryParse(TextBoxAulas.Text, out int aulas);
-                if (!aulasValidas)
-                {
-                    TextBoxAulas.BorderBrush = new SolidColorBrush(Colors.Red);
-                    dadosInvalidos = true;
-                }
-                else
-                {
-                    TextBoxAulas.BorderBrush = new SolidColorBrush(Colors.Black);
-                }
-                bool percentualValido = decimal.TryParse(TextBoxPercentualPresenca.Text, out decimal percentual);
-                if (!percentualValido)
-                {
-                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Red);
-                    dadosInvalidos = true;
-                }
-                else
-                {
-                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Black);
-                }
-                if (percentual > 100)
-                {
-                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Red);
-                    dadosInvalidos = true;
-                    TextRodape.Text = "Percentual de presença não pode ser maior que 100%";
-                }
-                else
-                {
-                    TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Black);
-                }
-
-                if (dadosInvalidos)
-                    return;
-
                 if (_folhaVerifica == null)
                 {
                     NovaFolhaDePresenca();
                 }
                 else
-                { 
+                {
                     AtualizaFolhaPresenca(_folhaVerifica);
                 }
 
@@ -128,7 +84,7 @@ namespace Escola.Telas
                 FolhaPresenca novaFolha = new FolhaPresenca();
                 novaFolha.Id = Guid.NewGuid();
 
-                if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
+                if (DateTime.TryParseExact(TextBoxDataAula.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
                 {
                     novaFolha.Data = Data;
                 }
@@ -138,24 +94,21 @@ namespace Escola.Telas
                     return;
                 }
                 novaFolha.Aulas = int.Parse(TextBoxAulas.Text);
-                novaFolha.Aluno = aluno;
                 novaFolha.Aluno_Id = aluno.Id;
                 novaFolha.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
                 novaFolha.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
 
-                SqlCommand commandInsert = new SqlCommand("INSERT INTO FolhasPresenca (Id, Aluno, Aluno_Id, Data, Aulas, PresencaNaAula, PossuiAtestadoFalta) VALUES (@Id, @Aluno, @Aluno_Id, @Data, @Aulas, @PresencaNaAula, @PossuiAtestadoFalta)", connection);
-                commandInsert.Parameters.AddWithValue("@Id", novaFolha.Id);
-                commandInsert.Parameters.AddWithValue("@Aluno_Id", novaFolha.Aluno_Id);
-                commandInsert.Parameters.AddWithValue("@Aluno", novaFolha.Aluno);
+                SqlCommand commandInsert = new SqlCommand("INSERT INTO FolhaPresenca (ID, Aluno_ID, Data, Aulas, PossuiAtestadoFalta, PresencaNaAula) VALUES (@ID, @Aluno_ID, @Data, @Aulas, @PossuiAtestadoFalta, @PresencaNaAula)", connection);
+                commandInsert.Parameters.AddWithValue("@ID", novaFolha.Id);
+                commandInsert.Parameters.AddWithValue("@Aluno_ID", novaFolha.Aluno_Id);
                 commandInsert.Parameters.AddWithValue("@Data", novaFolha.Data);
                 commandInsert.Parameters.AddWithValue("@Aulas", novaFolha.Aulas);
-                commandInsert.Parameters.AddWithValue("@PresencaNaAula", novaFolha.PresencaNaAula);
                 commandInsert.Parameters.AddWithValue("@PossuiAtestadoFalta", novaFolha.PossuiAtestadoFalta);
+                commandInsert.Parameters.AddWithValue("@PresencaNaAula", novaFolha.PresencaNaAula);
                 commandInsert.ExecuteNonQuery();
                 _folhaVerifica = novaFolha;
             }
         }
-
         private Aluno BuscaAluno()
         {
             string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
@@ -173,67 +126,36 @@ namespace Escola.Telas
                         Id = reader.GetGuid(0),
                         Nome = reader.GetString(1),
                         Classe = reader.GetString(2),
-                        DataNascimento = reader.GetDateTime(3),
+                        DataNascimento = !reader.IsDBNull(3) ? reader.GetDateTime(3) : (DateTime?)null,
                     };
                 }
                 return aluno;
             }
         }
-
         private void AtualizaFolhaPresenca(FolhaPresenca folha)
         {
             string connectionString = ConfigurationManager.ConnectionStrings["BDEscolaADO"].ConnectionString;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                Aluno aluno = BuscaAluno();
-                if (aluno == null)
-                {
-                    MessageBox.Show("Aluno não cadastrado");
-                    return;
-                }
-                SqlCommand commandBuscaFolha = new SqlCommand("SELEC Data, Aulas, PresencaNaAula, PossuiAtestadoFalta FROM FolhasPresenca WHERE Id = @Id", connection);
-                commandBuscaFolha.Parameters.AddWithValue("@Id", folha.Id);
-                SqlDataReader reader = commandBuscaFolha.ExecuteReader();
-                FolhaPresenca folhaExiste = null;
-                while (reader.Read())
-                {
-                    folhaExiste = new FolhaPresenca
-                    {
-                        Data = reader.GetDateTime(0),
-                        Aulas = reader.GetInt32(1),
-                        PresencaNaAula = reader.GetDecimal(2),
-                        PossuiAtestadoFalta = reader.GetBoolean(3),
-                    };
-                }
-                if (DateTime.TryParseExact(MaskedTextData.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime Data))
-                {
-                    folha.Data = Data;
-                }
-                else
-                {
-                    TextRodape.Text = "Data inválida!";
-                    return;
-                }
                 folha.Aulas = int.Parse(TextBoxAulas.Text);
+                folha.Data = DateTime.ParseExact(TextBoxDataAula.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
                 folha.PresencaNaAula = decimal.Parse(TextBoxPercentualPresenca.Text);
                 folha.PossuiAtestadoFalta = CheckBoxAtestado.IsChecked.Value;
 
-                SqlCommand commandUpdate = new SqlCommand("UPDATE FolhasPresenca SET Data = @Data, Aulas = @Aulas, PresencaNaAula = @PresencaNaAula, PossuiAtestadoFalta = @PossuiAtestadoFalta WHERE Id = @Id", connection);
+                SqlCommand commandUpdate = new SqlCommand("UPDATE FolhaPresenca SET Data = @Data, Aulas = @Aulas, PresencaNaAula = @PresencaNaAula, PossuiAtestadoFalta = @PossuiAtestadoFalta WHERE Id = @Id", connection);
                 commandUpdate.Parameters.AddWithValue("@Id", folha.Id);
                 commandUpdate.Parameters.AddWithValue("@Data", folha.Data);
                 commandUpdate.Parameters.AddWithValue("@Aulas", folha.Aulas);
                 commandUpdate.Parameters.AddWithValue("@PresencaNaAula", folha.PresencaNaAula);
                 commandUpdate.Parameters.AddWithValue("@PossuiAtestadoFalta", folha.PossuiAtestadoFalta);
                 commandUpdate.ExecuteNonQuery();
-                TextRodape.Text = "Folha de presença atualizada com sucesso!";
             }
         }
         private void ButtonFechar_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
-
         private void ButtonMinimizar_Click(object sender, RoutedEventArgs e)
         {
             this.WindowState = WindowState.Minimized;
@@ -255,14 +177,88 @@ namespace Escola.Telas
 
         private void ButtonLimparFolha_Click(object sender, RoutedEventArgs e)
         {
-            MaskedTextData.Text = "";
+            TextBoxDataAula.Text = "";
             TextBoxAulas.Text = "";
             TextBoxPercentualPresenca.Text = "";
             CheckBoxAtestado.IsChecked = false;
-            MaskedTextData.BorderBrush = new SolidColorBrush(Colors.Black); 
+            TextBoxDataAula.BorderBrush = new SolidColorBrush(Colors.Black); 
             TextBoxAulas.BorderBrush = new SolidColorBrush(Colors.Black);
             TextBoxPercentualPresenca.BorderBrush = new SolidColorBrush(Colors.Black);
             TextRodape.Text = "";
+        }
+        private void MascaraData_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!char.IsDigit(e.Text, e.Text.Length - 1))
+            {
+                e.Handled = true;
+                return;
+            }
+            var textBox = sender as TextBox;
+            string textoAtual = textBox.Text;
+
+            if (textBox.Text.Length == 2 || textoAtual.Length == 5)
+            {
+                textBox.Text += "/";
+                textBox.CaretIndex = textBox.Text.Length;
+            }
+        }
+
+        private void MascaraData_LostFocus(object sender, RoutedEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            if (!DateTime.TryParseExact(textBox.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            {
+                textBox.BorderBrush = Brushes.Red;
+                TextRodape.Text = "Data inválida!";
+            }
+            else
+            {
+                textBox.BorderBrush = Brushes.Gray;
+                TextRodape.Text = "";
+            }
+        }
+
+        private void MascaraData_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            if (textBox.Text.Length > 10)
+            {
+                textBox.Text = textBox.Text.Substring(0, 10);
+                textBox.CaretIndex = textBox.Text.Length;
+            }
+        }
+
+        private void MascaraAulas_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if(!char.IsDigit(e.Text, e.Text.Length - 1))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void MascaraPresenca_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if(char.IsDigit(e.Text,e.Text.Length - 1) || e.Text == ",")
+            {
+                e.Handled = false;
+                return;
+            }
+        }
+
+        private void MascaraPresenca_LostFocus(object sender, RoutedEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            if(decimal.TryParse(textBox.Text, out decimal valor) && valor > 100)
+            {
+                textBox.BorderBrush = Brushes.Red;
+                TextRodape.Text = "Percentual de presença não pode ser maior que 100%";
+            }
+            else
+            {
+                textBox.BorderBrush = Brushes.Gray;
+                TextRodape.Text = "";
+            }
         }
     }
 }

@@ -11,4 +11,11 @@ namespace Escola
         sqlConnection conexao = new sqlConnection();
         string stringConexao = "Data Source=DESKTOP-7VJGJ8V;Initial Catalog=BDEscolaADO;Integrated Security=True";
     }
+
+    internal class sqlConnection
+    {
+        public sqlConnection()
+        {
+        }
+    }
 }

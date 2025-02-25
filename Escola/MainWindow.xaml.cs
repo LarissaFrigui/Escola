@@ -19,6 +19,10 @@ namespace Escola
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+
+    //Verificar se é possível unificar o botão de maximizar, minimizar e fechar em um local só para não ter que ficar repetindo em cada tela criada 
+
+
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -79,7 +83,7 @@ namespace Escola
                         Id = reader.GetGuid(0),
                         Nome = reader.GetString(1),
                         Classe = reader.GetString(2),
-                        DataNascimento = reader.GetDateTime(3),
+                        DataNascimento = !reader.IsDBNull(3) ? reader.GetDateTime(3) : (DateTime?)null,
                     };
                     alunos.Add(aluno); 
                 }
@@ -140,7 +144,6 @@ namespace Escola
                             connection.Open();
                             SqlCommand command = new SqlCommand("DELETE FROM Alunos WHERE ID = @Id", connection);
                             command.Parameters.AddWithValue("@Id", alunoSelecionado.Id);
-                            var id = alunoSelecionado.Id;
                             command.ExecuteNonQuery();
                         }
                         ListarAlunos();
@@ -153,7 +156,6 @@ namespace Escola
             }
             else { TextRodape.Text = "Selecione um aluno para apagar!"; }
         }
-
         private void AbrirAluno(object sender, MouseButtonEventArgs e)
         {
             var alunoSelecionado = DataGridAlunos.SelectedItem as Aluno;
