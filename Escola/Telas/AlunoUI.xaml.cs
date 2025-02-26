@@ -120,13 +120,19 @@ namespace Escola.Telas
                 connection.Open();
                 aluno.Nome = TextBoxNomeAluno.Text;
                 aluno.Classe = TextBoxClasseAluno.Text;
-                aluno.DataNascimento = DateTime.ParseExact(TextBoxNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
-                aluno.AlteradoEm = DateTime.Now;
+                aluno.DataNascimento = string.IsNullOrWhiteSpace(TextBoxNascimentoAluno.Text) ? (DateTime?)null : DateTime.ParseExact(TextBoxNascimentoAluno.Text, "dd/MM/yyyy", CultureInfo.InvariantCulture); aluno.AlteradoEm = DateTime.Now;
                 SqlCommand command = new SqlCommand("UPDATE Alunos SET Nome = @Nome, Classe = @Classe, DataNascimento = @DataNascimento, AlteradoEm = @AlteradoEm WHERE Id = @Id", connection);
                 command.Parameters.AddWithValue("@Id", aluno.Id);
                 command.Parameters.AddWithValue("@Nome", aluno.Nome);
                 command.Parameters.AddWithValue("@Classe", aluno.Classe);
-                command.Parameters.AddWithValue("@DataNascimento", aluno.DataNascimento);
+                if (aluno.DataNascimento.HasValue)
+                {
+                    command.Parameters.AddWithValue("@DataNascimento", aluno.DataNascimento.Value);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@DataNascimento", DBNull.Value);
+                }
                 command.Parameters.AddWithValue("@AlteradoEm", aluno.AlteradoEm);
                 command.ExecuteNonQuery();
             }
