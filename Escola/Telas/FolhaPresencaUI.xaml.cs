@@ -52,6 +52,13 @@ namespace Escola.Telas
         {
             try
             {
+                if(string.IsNullOrWhiteSpace(TextBoxDataAula.Text))
+                {
+                    TextBoxDataAula.BorderBrush = Brushes.Red;
+                    TextRodape.Text = "Insira uma data!";
+                    return;
+                }
+
                 if (_folhaVerifica == null)
                 {
                     NovaFolhaDePresenca();
@@ -66,7 +73,7 @@ namespace Escola.Telas
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                TextRodape.Text = "Erro inesperado ao salvar os dados!";
+                TextRodape.Text = "Erro inesperado! Por favor tente novamente mais tarde.";
             }
         }
         private void NovaFolhaDePresenca()
